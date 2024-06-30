@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "514289367058",
+    "project_id": "qr-mate-2001",
+    "storage_bucket": "qr-mate-2001.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:514289367058:android:17cb334d923e23d7e140cb",
+        "android_client_info": {
+          "package_name": "com.example.qrmate"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "514289367058-451dno282toinh8h7gvfs2ku6t6vj6cg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.qrmate",
+            "certificate_hash": "e0d11e6e0d0becb0a848a19b40dbaf8045d8305e"
+          }
+        },
+        {
+          "client_id": "514289367058-26hg3tun69t7cm7obsdsr8ivrepaq07v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkPqrwHWq4_cnXQFhNr1_ZH74yGAR9fCo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "514289367058-26hg3tun69t7cm7obsdsr8ivrepaq07v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

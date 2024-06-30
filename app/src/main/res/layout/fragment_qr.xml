@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1a0b26"
+    android:orientation="vertical"
+    tools:context=".QrFragment">
+
+    <TextView
+        android:id="@+id/tvHeading"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="-10dp"
+        android:layout_marginEnd="-10dp"
+        android:background="@drawable/textview_bg"
+        android:gravity="center_horizontal"
+        android:padding="5dp"
+        android:text="QR Zone"
+        android:textColor="@color/white"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <TextView
+        android:id="@+id/tvScanQR"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:background="#7862F9"
+        android:padding="5dp"
+        android:paddingStart="10dp"
+        android:text="Scan any QR"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvHeading"/>
+    
+    <ImageView
+        android:id="@+id/openScanner"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:padding="10dp"
+        app:tint="@color/white"
+        android:background="@drawable/gradient_bg"
+        android:layout_marginTop="50dp"
+        app:layout_constraintTop_toBottomOf="@id/tvScanQR"
+        android:src="@drawable/scanner_icon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
