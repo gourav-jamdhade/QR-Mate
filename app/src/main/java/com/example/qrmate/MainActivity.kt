@@ -1,5 +1,6 @@
 package com.example.qrmate
 
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.icu.text.Transliterator.Position
 import android.os.Bundle
@@ -36,6 +37,8 @@ class MainActivity : AppCompatActivity() {
 
         }
 
+
+
         binding.btnInfo.setOnClickListener {
             if (currentFragment != 0) {
                 selectFragment(0);
@@ -52,6 +55,8 @@ class MainActivity : AppCompatActivity() {
         selectFragment(1)
 
     }
+
+
 
     private fun selectFragment(position: Int) {
 
@@ -70,6 +75,8 @@ class MainActivity : AppCompatActivity() {
                 .commit()
         }
 
+
+
         updateButtonAppearance(position)
 
         currentFragment = position
@@ -78,7 +85,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateButtonAppearance(position: Int) {
         val buttons = listOf(binding.btnInfo, binding.btnQr, binding.btnProfile)
-        val activatedDrawable = getDrawable(R.drawable.gradient_bg)
+        val activatedDrawable = getDrawable(R.drawable.blue_bg)
         val deactivatedDrawable = getDrawable(R.drawable.rounded_bg)
         val activatedColor = getColorStateList(R.color.white)
         val deactivatedColor = getColorStateList(R.color.white)

@@ -16,7 +16,7 @@ class IntroActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_intro);
 
-        button = findViewById(R.id.button)
+        button = findViewById(R.id.btnGetStarted)
 
         val prefs = getSharedPreferences("prefs", MODE_PRIVATE)
         var hasEntered = prefs.getBoolean("hasEntered", false)
