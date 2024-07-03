@@ -2,6 +2,9 @@ package com.example.qrmate
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -29,6 +32,8 @@ class QrFragment : Fragment() {
     private lateinit var binding: FragmentQrBinding
 
     private val REQUEST_CODE_QR_SCAN = 101
+    private val REQUEST_CODE_MAP = 102
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -43,6 +48,10 @@ class QrFragment : Fragment() {
             showPlainTextInputDialog()
         }
 
+        binding.btnLocation.setOnClickListener {
+            openMapsForLocation()
+        }
+
         binding.ivScanner.setOnClickListener {
             val intent = Intent(activity, QrScannerActivity::class.java)
             startActivityForResult(intent, REQUEST_CODE_QR_SCAN)
@@ -51,9 +60,15 @@ class QrFragment : Fragment() {
 
     }
 
+    private fun openMapsForLocation() {
+        val locationIntent = Intent(activity, MapActivity::class.java)
+        //locationIntent.setPackage("com.google.android.apps.maps")
+        startActivityForResult(locationIntent, REQUEST_CODE_MAP)
+    }
+
     private fun showPlainTextInputDialog() {
         val builder = AlertDialog.Builder(requireContext())
-        builder.setTitle("Enter Plain Text")
+        builder.setTitle("Enter Text")
 
         val input = EditText(requireContext())
         input.setBackgroundResource(android.R.color.white)
@@ -114,6 +129,18 @@ class QrFragment : Fragment() {
             } else {
                 Toast.makeText(activity, "Scan Cancelled", Toast.LENGTH_SHORT).show()
             }
+        } else if (requestCode == REQUEST_CODE_MAP && resultCode == Activity.RESULT_OK) {
+            val coordinates = data?.getStringExtra("coordinates")
+            if (coordinates != null) {
+                val qrBitmap = generateQR("geo:$coordinates")
+                if (qrBitmap != null) {
+                    val byteArray = bitmapToByteArray(qrBitmap)
+                    QrDisplayActivity.start(requireContext(), "geo:$coordinates", byteArray)
+                } else {
+                    Toast.makeText(activity, "Failed to generate QR Code", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
         } else {
             Log.d("RESULT", "NOT CALLED")
         }
@@ -163,7 +190,7 @@ class QrFragment : Fragment() {
                 }
             }
 
-            else-> {
+            else -> {
                 // Handle SMS URIs
                 showDialog(contents)
             }
@@ -181,8 +208,21 @@ class QrFragment : Fragment() {
             .setTitle("QR Code Content")
             .setMessage(contents)
             .setPositiveButton("OK", null)
+            .setNegativeButton("Copy") { _, _ ->
+                copyToClipboard(contents)
+
+            }
             .create()
         dialog.show()
+    }
+
+    private fun copyToClipboard(contents: String) {
+        val clipboard =
+            requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("QR Code Content", contents)
+        clipboard.setPrimaryClip(clip)
+        Toast.makeText(requireContext(), "Copied to Clipboard", Toast.LENGTH_SHORT).show()
+
     }
 
     private fun extractPhoneNumber(vcard: String): String? {

@@ -66,4 +66,9 @@ dependencies {
 
     implementation ("com.google.zxing:core:3.5.3")
     implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation ("com.google.android.gms:play-services-maps:19.0.0")
+    implementation ("com.google.android.gms:play-services-location:21.3.0")
+    implementation ("com.google.android.libraries.places:places:3.5.0")
+
+
 }

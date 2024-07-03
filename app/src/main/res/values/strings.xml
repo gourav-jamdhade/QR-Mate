@@ -2,4 +2,6 @@
     <string name="app_name">QR Mate</string>
     <string name="default_web_client_id">514289367058-26hg3tun69t7cm7obsdsr8ivrepaq07v.apps.googleusercontent.com</string>
     <string name="qr_scanner_prompt">Place a QR code inside the viewfinder rectangle to scan it</string>
+    <string name="google_maps_key">AIzaSyD05Z-T8S4iL2kGX7jpWGw4k_4XN7EcBsE</string>
+    <string name="google_places_key">AIzaSyBk4_YEDcFHBSaJkTsFXrTkh29xGQ168PU</string>
 </resources>

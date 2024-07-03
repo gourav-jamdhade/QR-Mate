@@ -23,7 +23,7 @@ class QrDisplayActivity : AppCompatActivity() {
 
 
         binding.tvTitle.text = "QR Code For Clipboard"
-        binding.tvType.text = "Plain Text"
+        binding.tvType.text = "Text: $text"
         binding.ivQrCode.setImageBitmap(qrBitmap)
 
     }

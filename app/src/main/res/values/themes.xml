@@ -3,7 +3,7 @@
     <style name="Base.Theme.QRMate" parent="Theme.Material3.DayNight.NoActionBar">
 
         <item name="statusBarBackground">#1a0b26</item>
-        <item name="android:statusBarColor">#1a0b26</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
