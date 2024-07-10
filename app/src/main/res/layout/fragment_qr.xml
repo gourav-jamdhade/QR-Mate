@@ -191,7 +191,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/btnWifi"
+                android:id="@+id/btnImage"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -201,7 +201,7 @@
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:layout_gravity="center"
-                    android:src="@drawable/wifi_icon" />
+                    android:src="@drawable/image_icon" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -209,7 +209,7 @@
                     android:layout_gravity="center"
                     android:gravity="center"
                     android:padding="5dp"
-                    android:text="Wi-Fi"
+                    android:text="Image"
                     android:textColor="@color/black" />
             </LinearLayout>
 

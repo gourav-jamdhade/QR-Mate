@@ -18,6 +18,9 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
 import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.core.view.marginLeft
+import androidx.core.view.marginStart
+import androidx.core.view.setPadding
 import com.example.qrmate.databinding.FragmentQrBinding
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.WriterException
@@ -56,8 +59,43 @@ class QrFragment : Fragment() {
             val intent = Intent(activity, QrScannerActivity::class.java)
             startActivityForResult(intent, REQUEST_CODE_QR_SCAN)
         }
+
+
+        binding.btnWebsite.setOnClickListener {
+            showWebsiteTextInputDialog()
+        }
         return binding.root
 
+    }
+
+    private fun showWebsiteTextInputDialog() {
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Enter web address")
+
+        val input = EditText(requireContext())
+        input.setPadding(25)
+        input.hint = "Enter web address in https:// format"
+        input.setBackgroundResource(android.R.color.white)
+        builder.setView(input)
+
+        builder.setPositiveButton("OK") { dialog, _ ->
+            val text = input.text.toString()
+            if (text.isNotEmpty()) {
+                val qrBitmap = generateQR(text)
+                if (qrBitmap != null) {
+                    val byteArray = bitmapToByteArray(qrBitmap)
+                    Log.d("QR Bitmap", qrBitmap.toString())
+                    QrDisplayActivity.start(requireContext(), text, byteArray)
+                } else {
+                    Log.d("Qr Bitmap", "Failed")
+                }
+            }
+
+            dialog.dismiss()
+        }
+        builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+
+        builder.show()
     }
 
     private fun openMapsForLocation() {
@@ -135,7 +173,7 @@ class QrFragment : Fragment() {
                 val qrBitmap = generateQR("geo:$coordinates")
                 if (qrBitmap != null) {
                     val byteArray = bitmapToByteArray(qrBitmap)
-                    QrDisplayActivity.start(requireContext(), "geo:$coordinates", byteArray)
+                    QrDisplayActivity.start(requireContext(), "Location: $coordinates", byteArray)
                 } else {
                     Toast.makeText(activity, "Failed to generate QR Code", Toast.LENGTH_SHORT)
                         .show()
