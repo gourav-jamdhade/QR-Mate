@@ -11,21 +11,26 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
+import android.provider.ContactsContract
+import android.provider.MediaStore
+import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
-import androidx.core.content.ContentProviderCompat.requireContext
-import androidx.core.view.marginLeft
-import androidx.core.view.marginStart
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.setPadding
+import androidx.fragment.app.Fragment
 import com.example.qrmate.databinding.FragmentQrBinding
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.WriterException
-import com.google.zxing.integration.android.IntentIntegrator
-import com.google.zxing.integration.android.IntentResult
 import com.google.zxing.qrcode.QRCodeWriter
 import java.io.ByteArrayOutputStream
 
@@ -34,18 +39,32 @@ class QrFragment : Fragment() {
 
     private lateinit var binding: FragmentQrBinding
 
+    private lateinit var imagePickerLauncher: ActivityResultLauncher<Intent>
     private val REQUEST_CODE_QR_SCAN = 101
     private val REQUEST_CODE_MAP = 102
+    private val REQUEST_CODE_CONTACT_PICK = 103
+    private val REQUEST_CODE_IMAGE_PICK = 104
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View {
         // Inflate the layout for this fragment
         binding = FragmentQrBinding.inflate(inflater, container, false)
 
 
+
+        imagePickerLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+
+                if (result.resultCode == Activity.RESULT_OK) {
+                    Log.d("DATA", result.data.toString())
+                    val data = result.data
+                    val imageUri = data?.data
+                    if (imageUri != null) {
+                        processImageUri(imageUri)
+                    }
+                }
+            }
         //plain text
         binding.btnClipboard.setOnClickListener {
             showPlainTextInputDialog()
@@ -64,8 +83,169 @@ class QrFragment : Fragment() {
         binding.btnWebsite.setOnClickListener {
             showWebsiteTextInputDialog()
         }
+
+        binding.btnContact.setOnClickListener {
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(), Manifest.permission.READ_CONTACTS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    requireActivity(), arrayOf(Manifest.permission.READ_CONTACTS), 1
+                )
+            } else {
+                pickContact()
+            }
+        }
+
+        binding.btnYoutube.setOnClickListener {
+            showYoutubeTextInputDialog()
+        }
+
+
+
+        binding.btnImage.setOnClickListener {
+            pickImage()
+        }
+
+
+
         return binding.root
 
+    }
+
+    private fun openDialog() {
+
+    }
+
+    private fun openFbOrPlayStore() {
+
+        val facebookPackage = getInstalledFacebookApp()
+        if (facebookPackage != null) {
+            try {
+                val intent =
+                    requireContext().packageManager.getLaunchIntentForPackage(facebookPackage)
+                if (intent != null) {
+                    startActivity(intent)
+                    return
+                }
+            } catch (e: Exception) {
+                // Failed to open the app
+            }
+        }
+
+        // If no Facebook app is installed or failed to open, open Play Store
+        val playStoreUri = "https://play.google.com/store/apps/details?id=com.facebook.katana"
+        val playStoreIntent = Intent(Intent.ACTION_VIEW, Uri.parse(playStoreUri))
+        startActivity(playStoreIntent)
+
+    }
+
+    private fun getInstalledFacebookApp(): String? {
+        val packageManager = requireContext().packageManager
+        val facebookPackages =
+            listOf("com.facebook.katana", "com.facebook.lite", "com.facebook.orca")
+
+        facebookPackages.forEach { packageName ->
+            try {
+                packageManager.getPackageInfo(packageName, 0)
+                Log.d("FacebookApp", "Found installed package: $packageName")
+                return packageName
+            } catch (e: Exception) {
+                // Package not found, continue checking
+                Log.d("Not Found", "Not Found")
+            }
+        }
+        return null
+    }
+
+    private fun isFBInstalled(): Boolean {
+
+        val packageManager = requireContext().packageManager
+        val facebookPackages =
+            listOf("com.facebook.katana", "com.facebook.lite", "com.facebook.orca")
+
+        facebookPackages.forEach { packageName ->
+            try {
+                packageManager.getPackageInfo(packageName, 0)
+                return true
+            } catch (e: Exception) {
+                // Package not installed
+            }
+
+        }
+        return false
+    }
+
+    private fun processImageUri(imageUri: Uri) {
+
+        try {
+            val inputStream = requireContext().contentResolver.openInputStream(imageUri)
+            val imageBitmap = BitmapFactory.decodeStream(inputStream)
+            inputStream?.close()
+
+            if (imageBitmap != null) {
+                val compressedBitmap = resizeBitmap(imageBitmap, 64, 64)
+                val qrBitmap = generateQRFromImage(compressedBitmap)
+                if (qrBitmap != null) {
+                    val byteArray = bitmapToByteArray(qrBitmap)
+                    QrDisplayActivity.start(requireContext(), "Image QR", byteArray)
+                } else {
+                    Log.e("QR Generation", "QR Bitmap is null")
+                }
+            } else {
+                Log.e("Image Processing", "Bitmap is null")
+            }
+        } catch (e: Exception) {
+            Log.e("Image Processing", "Error processing image URI", e)
+        }
+
+    }
+
+    private fun resizeBitmap(bitmap: Bitmap, width: Int, height: Int): Bitmap {
+        return Bitmap.createScaledBitmap(bitmap, width, height, true)
+    }
+
+
+    private fun pickImage() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "image/*"
+        imagePickerLauncher.launch(intent)
+
+    }
+
+    private fun showYoutubeTextInputDialog() {
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Enter YouTube Video address")
+
+        val input = EditText(requireContext())
+        input.setPadding(25)
+        input.hint = "Enter web address in https:// format"
+        input.setBackgroundResource(android.R.color.white)
+        builder.setView(input)
+
+        builder.setPositiveButton("OK") { dialog, _ ->
+            val text = input.text.toString()
+            if (text.isNotEmpty()) {
+                val qrBitmap = generateQR(text)
+                if (qrBitmap != null) {
+                    val byteArray = bitmapToByteArray(qrBitmap)
+                    Log.d("QR Bitmap", qrBitmap.toString())
+                    QrDisplayActivity.start(requireContext(), text, byteArray)
+                } else {
+                    Log.d("Qr Bitmap", "Failed")
+                }
+            }
+
+            dialog.dismiss()
+        }
+        builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+
+        builder.show()
+    }
+
+    private fun pickContact() {
+        val intent = Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI)
+        startActivityForResult(intent, REQUEST_CODE_CONTACT_PICK)
     }
 
     private fun showWebsiteTextInputDialog() {
@@ -179,9 +359,109 @@ class QrFragment : Fragment() {
                         .show()
                 }
             }
+        } else if (requestCode == REQUEST_CODE_CONTACT_PICK && resultCode == Activity.RESULT_OK) {
+            data?.data?.let { contactUri ->
+                val contactDetails = getContactDetails(contactUri)
+                if (contactDetails != null) {
+                    val qrBitmap = generateQR(contactDetails)
+                    if (qrBitmap != null) {
+                        val byteArray = bitmapToByteArray(qrBitmap)
+                        QrDisplayActivity.start(requireContext(), contactDetails, byteArray)
+                    } else {
+                        Toast.makeText(activity, "Failed to generate QR Code", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                } else {
+                    Toast.makeText(
+                        activity, "Failed to retrieve contact details", Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+            }
+        } else if (requestCode == REQUEST_CODE_IMAGE_PICK && resultCode == Activity.RESULT_OK) {
+            val imageUri = data?.data
+            if (imageUri != null) {
+                val imageBitmap =
+                    MediaStore.Images.Media.getBitmap(requireActivity().contentResolver, imageUri)
+                val qrBitmap = generateQRFromImage(imageBitmap)
+                if (qrBitmap != null) {
+                    val byteArray = bitmapToByteArray(qrBitmap)
+                    Log.d("IMAGE PICK", "Image QR generated")
+                    QrDisplayActivity.start(requireContext(), "Image QR", byteArray)
+                }
+            }
+
         } else {
             Log.d("RESULT", "NOT CALLED")
         }
+
+    }
+
+    private fun generateQRFromImage(imageBitmap: Bitmap?): Bitmap? {
+        val writer = QRCodeWriter()
+
+        return try {
+            val baos = ByteArrayOutputStream()
+            imageBitmap?.compress(Bitmap.CompressFormat.JPEG, 25, baos)
+            val imageBytes = baos.toByteArray()
+            val imageString = Base64.encodeToString(imageBytes, Base64.DEFAULT)
+            Log.d("Image String", imageString) // Debuggin
+
+            val bitMatrix = writer.encode(imageString, BarcodeFormat.QR_CODE, 512, 512)
+            val width = bitMatrix.width
+            val height = bitMatrix.height
+            val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+            for (x in 0 until width) {
+                for (y in 0 until height) {
+                    bmp.setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
+                }
+            }
+            bmp
+
+        } catch (e: WriterException) {
+            null
+        }
+    }
+
+    private fun getContactDetails(contactUri: Uri): String? {
+        val cursor = requireContext().contentResolver.query(contactUri, null, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val id = it.getString(it.getColumnIndexOrThrow(ContactsContract.Contacts._ID))
+                val name =
+                    it.getString(it.getColumnIndexOrThrow(ContactsContract.Contacts.DISPLAY_NAME))
+                val hasPhoneNumber =
+                    it.getInt(it.getColumnIndexOrThrow(ContactsContract.Contacts.HAS_PHONE_NUMBER))
+
+                var phoneNumber: String? = null
+                if (hasPhoneNumber > 0) {
+                    val phoneCursor = requireContext().contentResolver.query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        null,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                        arrayOf(id),
+                        null
+                    )
+
+                    phoneCursor?.use { phoneCursor ->
+                        if (phoneCursor.moveToFirst()) {
+                            phoneNumber = phoneCursor.getString(
+                                phoneCursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                            )
+                        }
+
+                    }
+                }
+
+                return if (phoneNumber != null) {
+                    "$name: $phoneNumber"
+                } else {
+                    name
+                }
+            }
+        }
+
+        return null
 
     }
 
@@ -242,15 +522,12 @@ class QrFragment : Fragment() {
 
     private fun showDialog(contents: String) {
         Log.d("QRCode", "Showing dialog for content: $contents")
-        val dialog = AlertDialog.Builder(requireContext())
-            .setTitle("QR Code Content")
-            .setMessage(contents)
-            .setPositiveButton("OK", null)
-            .setNegativeButton("Copy") { _, _ ->
-                copyToClipboard(contents)
+        val dialog =
+            AlertDialog.Builder(requireContext()).setTitle("QR Code Content").setMessage(contents)
+                .setPositiveButton("OK", null).setNegativeButton("Copy") { _, _ ->
+                    copyToClipboard(contents)
 
-            }
-            .create()
+                }.create()
         dialog.show()
     }
 
@@ -285,6 +562,19 @@ class QrFragment : Fragment() {
         val stream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
         return stream.toByteArray()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 1 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            pickContact()
+        } else if (requestCode == REQUEST_CODE_IMAGE_PICK && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            pickImage()
+        } else {
+            Toast.makeText(activity, "Permission Denied", Toast.LENGTH_SHORT).show()
+        }
     }
 
 }
