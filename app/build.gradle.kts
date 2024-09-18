@@ -1,9 +1,10 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-
     // Add the Google services Gradle plugin
     id("com.google.gms.google-services")
+    id("com.google.devtools.ksp")
+
 }
 
 android {
@@ -43,7 +44,7 @@ android {
 }
 
 dependencies {
-
+    val room_version = "2.6.1"
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -63,12 +64,15 @@ dependencies {
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation("com.google.firebase:firebase-auth")
     implementation ("com.google.android.gms:play-services-auth:21.2.0")
-
     implementation ("com.google.zxing:core:3.5.3")
     implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation ("com.google.android.gms:play-services-maps:19.0.0")
     implementation ("com.google.android.gms:play-services-location:21.3.0")
     implementation ("com.google.android.libraries.places:places:3.5.0")
-
+    implementation("androidx.room:room-runtime:$room_version")
+    annotationProcessor("androidx.room:room-compiler:$room_version")
+    ksp( "androidx.room:room-compiler:$room_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
 }
