@@ -1,22 +1,25 @@
 package com.example.qrmate
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.ProgressDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
-import android.Manifest
-import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
 import android.provider.ContactsContract
 import android.provider.MediaStore
+import android.provider.OpenableColumns
 import android.util.Base64
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,6 +32,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import com.example.qrmate.databinding.FragmentQrBinding
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
@@ -44,14 +49,28 @@ class QrFragment : Fragment() {
     private val REQUEST_CODE_MAP = 102
     private val REQUEST_CODE_CONTACT_PICK = 103
     private val REQUEST_CODE_IMAGE_PICK = 104
-
+    private val PICK_PDF_FILE = 1
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         // Inflate the layout for this fragment
         binding = FragmentQrBinding.inflate(inflater, container, false)
 
+        //QR Scanner
+        binding.ivScanner.setOnClickListener {
+            val intent = Intent(activity, QrScannerActivity::class.java)
+            startActivityForResult(intent, REQUEST_CODE_QR_SCAN)
+        }
 
+        val pickPdfLauncher =
+            registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+                uri?.let {
+                    // If a file is selected, upload the PDF
+                    val pdfTitle = getFileNameFromUri(it)
+                    val progressDialog = showProgressDialog(requireContext())
+                    uploadPDFToFirebase(it,pdfTitle,progressDialog)
+                }
+            }
 
         imagePickerLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -70,20 +89,19 @@ class QrFragment : Fragment() {
             showPlainTextInputDialog()
         }
 
+
+        //Location btn
         binding.btnLocation.setOnClickListener {
             openMapsForLocation()
         }
 
-        binding.ivScanner.setOnClickListener {
-            val intent = Intent(activity, QrScannerActivity::class.java)
-            startActivityForResult(intent, REQUEST_CODE_QR_SCAN)
-        }
 
-
+        //Website btn
         binding.btnWebsite.setOnClickListener {
             showWebsiteTextInputDialog()
         }
 
+        //Contact btn
         binding.btnContact.setOnClickListener {
             if (ContextCompat.checkSelfPermission(
                     requireContext(), Manifest.permission.READ_CONTACTS
@@ -97,84 +115,82 @@ class QrFragment : Fragment() {
             }
         }
 
+        //Youtube btn
         binding.btnYoutube.setOnClickListener {
             showYoutubeTextInputDialog()
         }
 
-
-
+        //Image btn
         binding.btnImage.setOnClickListener {
             pickImage()
         }
 
+        //pdf btn
+        binding.btnPDF.setOnClickListener {
 
+            pickPdfLauncher.launch("application/pdf")
+        }
 
         return binding.root
 
     }
 
-    private fun openDialog() {
+    private fun showProgressDialog(requireContext: Context): ProgressDialog {
 
+        val progressDialog = ProgressDialog(requireContext)
+        progressDialog.setMessage("Uploading PDF...")
+        progressDialog.setCancelable(false)
+        progressDialog.show()
+        return progressDialog
     }
 
-    private fun openFbOrPlayStore() {
 
-        val facebookPackage = getInstalledFacebookApp()
-        if (facebookPackage != null) {
-            try {
-                val intent =
-                    requireContext().packageManager.getLaunchIntentForPackage(facebookPackage)
-                if (intent != null) {
-                    startActivity(intent)
-                    return
+    @SuppressLint("Range")
+    private fun getFileNameFromUri(uri: Uri): String {
+        var fileName = ""
+        val cursor = requireContext().contentResolver.query(uri, null, null, null, null)
+
+        cursor?.use {
+            if (cursor.moveToFirst()) {
+                // Get the display name from the file metadata
+                fileName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+            }
+        }
+        return fileName
+    }
+
+    private fun uploadPDFToFirebase(pdfUri: Uri, pdfTitle: Any, progressDialog: ProgressDialog) {
+
+        val storageRef = Firebase.storage.reference
+        val pdfRef = storageRef.child("pdfs/${System.currentTimeMillis()}.pdf")
+
+        val uploadTask = pdfRef.putFile(pdfUri)
+
+        uploadTask.addOnSuccessListener {
+            pdfRef.downloadUrl.addOnSuccessListener { uri ->
+                val pdfUrl = uri.toString()
+
+                val bitmap = generateQR(pdfUrl)
+
+                progressDialog.dismiss()
+                if(bitmap!=null){
+                    val byteArray = bitmapToByteArray(bitmap)
+                    QrDisplayActivity.start(requireContext(), "PDF QR: $pdfTitle", byteArray)
                 }
-            } catch (e: Exception) {
-                // Failed to open the app
+            }.addOnFailureListener { exception ->
+                progressDialog.dismiss()
+
+                Toast.makeText(activity, "Failed to Download PDF", Toast.LENGTH_SHORT).show()
             }
+        }.addOnFailureListener{ exception ->
+            progressDialog.dismiss()
+
+            Toast.makeText(activity, "Failed to Upload PDF", Toast.LENGTH_SHORT).show()
         }
-
-        // If no Facebook app is installed or failed to open, open Play Store
-        val playStoreUri = "https://play.google.com/store/apps/details?id=com.facebook.katana"
-        val playStoreIntent = Intent(Intent.ACTION_VIEW, Uri.parse(playStoreUri))
-        startActivity(playStoreIntent)
-
     }
 
-    private fun getInstalledFacebookApp(): String? {
-        val packageManager = requireContext().packageManager
-        val facebookPackages =
-            listOf("com.facebook.katana", "com.facebook.lite", "com.facebook.orca")
 
-        facebookPackages.forEach { packageName ->
-            try {
-                packageManager.getPackageInfo(packageName, 0)
-                Log.d("FacebookApp", "Found installed package: $packageName")
-                return packageName
-            } catch (e: Exception) {
-                // Package not found, continue checking
-                Log.d("Not Found", "Not Found")
-            }
-        }
-        return null
-    }
-
-    private fun isFBInstalled(): Boolean {
-
-        val packageManager = requireContext().packageManager
-        val facebookPackages =
-            listOf("com.facebook.katana", "com.facebook.lite", "com.facebook.orca")
-
-        facebookPackages.forEach { packageName ->
-            try {
-                packageManager.getPackageInfo(packageName, 0)
-                return true
-            } catch (e: Exception) {
-                // Package not installed
-            }
-
-        }
-        return false
-    }
+  
 
     private fun processImageUri(imageUri: Uri) {
 
@@ -188,7 +204,7 @@ class QrFragment : Fragment() {
                 val qrBitmap = generateQRFromImage(compressedBitmap)
                 if (qrBitmap != null) {
                     val byteArray = bitmapToByteArray(qrBitmap)
-                    QrDisplayActivity.start(requireContext(), "Image QR", byteArray)
+                    QrDisplayActivity.start(requireContext(), "Image QR: $imageUri", byteArray)
                 } else {
                     Log.e("QR Generation", "QR Bitmap is null")
                 }
