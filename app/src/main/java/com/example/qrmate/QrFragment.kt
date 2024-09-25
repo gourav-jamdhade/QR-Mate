@@ -31,6 +31,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
+import com.android.identity.util.UUID
 import com.example.qrmate.databinding.FragmentQrBinding
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -198,13 +199,14 @@ class QrFragment : Fragment() {
             val inputStream = requireContext().contentResolver.openInputStream(imageUri)
             val imageBitmap = BitmapFactory.decodeStream(inputStream)
             inputStream?.close()
-
             if (imageBitmap != null) {
+
+                val fileName = "${UUID.randomUUID()}"
                 val compressedBitmap = resizeBitmap(imageBitmap, 64, 64)
                 val qrBitmap = generateQRFromImage(compressedBitmap)
                 if (qrBitmap != null) {
                     val byteArray = bitmapToByteArray(qrBitmap)
-                    QrDisplayActivity.start(requireContext(), "Image QR: $imageUri", byteArray)
+                    QrDisplayActivity.start(requireContext(), "Image QR: $fileName", byteArray)
                 } else {
                     Log.e("QR Generation", "QR Bitmap is null")
                 }

@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -78,7 +79,14 @@ class QrDisplayActivity : AppCompatActivity() {
             }
 
             saveToRoomDB(this, qrBitmap, text, qrDatabase)
-            saveToFirebase(this, qrBitmap!!, text!!, currentTime)
+
+            if(isInternetAvailable(this)){
+                saveToFirebase(this, qrBitmap!!, text!!, currentTime)
+
+            }else{
+                Toast.makeText(this, "No internet connection. Please check your connection and try again.", Toast.LENGTH_SHORT).show()
+            }
+
 
         }
 
@@ -119,11 +127,7 @@ class QrDisplayActivity : AppCompatActivity() {
     }
 
     private fun saveToFirebase(context: Context, qrBitmap: Bitmap, text: String, currentTime: Long) {
-        // Check for internet connectivity
-        if (!isInternetAvailable(context)) {
-            Toast.makeText(context, "No internet connection. Please check your connection and try again.", Toast.LENGTH_SHORT).show()
-            return
-        }
+
 
         // Get the current user from Firebase Auth
         val firebaseAuth = FirebaseAuth.getInstance()
@@ -134,6 +138,12 @@ class QrDisplayActivity : AppCompatActivity() {
             Log.e("Firebase_Save", "User is not logged in.")
             return
         }
+
+        runOnUiThread{
+            binding.progressBar.visibility = View.VISIBLE
+            binding.tvSave.visibility = View.VISIBLE
+        }
+
 
         // Get user ID from the current logged-in user (Google Sign-In ID)
         val userId = currentUser.uid
@@ -171,13 +181,20 @@ class QrDisplayActivity : AppCompatActivity() {
 
                 // Push the data to the user's specific node in Realtime Database
                 userRef.push().setValue(qrCodeData).addOnCompleteListener { task ->
+                    runOnUiThread{
+                        binding.progressBar.visibility = View.GONE
+                        binding.tvSave.visibility = View.GONE
+                    }
                     if (task.isSuccessful) {
+
                         Toast.makeText(context, "QR Code saved to Firebase successfully.", Toast.LENGTH_SHORT).show()
                         Log.d("Firebase_Save", "QR Code saved successfully under user ID: $userId")
                     } else {
                         Toast.makeText(context, "Failed to save QR Code to Firebase.", Toast.LENGTH_SHORT).show()
                         Log.e("Firebase_Save", "Error saving QR Code: ${task.exception?.message}")
                     }
+
+
                 }
             }.addOnFailureListener { e ->
                 // Handle failure in getting the download URL
@@ -189,6 +206,8 @@ class QrDisplayActivity : AppCompatActivity() {
             Toast.makeText(context, "Failed to upload QR Code image: ${e.message}", Toast.LENGTH_SHORT).show()
             Log.e("Firebase_Save", "Error uploading image: ${e.message}")
         }
+
+
 
     }
 
@@ -205,11 +224,24 @@ class QrDisplayActivity : AppCompatActivity() {
         qrDatabase: QRDatabase
     ) {
 
+        // Get the current user from Firebase Auth
+        val firebaseAuth = FirebaseAuth.getInstance()
+        val currentUser = firebaseAuth.currentUser
+
+        if (currentUser == null) {
+            Toast.makeText(context, "User is not logged in.", Toast.LENGTH_SHORT).show()
+            Log.e("Room_Save", "User is not logged in.")
+            return
+        }
+
+        // Get user ID from the current logged-in user (Google Sign-In ID)
+        val userEmail = currentUser.email
+        val userParts = userEmail?.substringBefore("@")?:"unknown_user"
         // Get the current time
         val currentTime = System.currentTimeMillis()
 
         // Save the QR code image to the "QR Mate" folder
-        val qrMateFolder = File(Environment.getExternalStorageDirectory(), "QR Mate")
+        val qrMateFolder = File(Environment.getExternalStorageDirectory(), "QR Mate/$userParts")
         if (!qrMateFolder.exists()) {
             if (!qrMateFolder.mkdirs()) {
                 Log.e("Error creating directory", "Failed to create QR Mate directory")

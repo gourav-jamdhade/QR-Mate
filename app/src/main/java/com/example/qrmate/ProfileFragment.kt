@@ -1,59 +1,206 @@
 package com.example.qrmate
 
+import android.app.AlertDialog
+import android.content.Context
+import android.content.Intent
+import android.net.ConnectivityManager
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import com.example.qrmate.DAO.QRDatabase
+import com.example.qrmate.databinding.FragmentProfileBinding
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [ProfileFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class ProfileFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private lateinit var binding: FragmentProfileBinding
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_profile, container, false)
-    }
+        binding = FragmentProfileBinding.inflate(inflater, container, false)
+        val account = GoogleSignIn.getLastSignedInAccount(requireActivity())
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment ProfileFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            ProfileFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .build()
+
+        val googleSignInClient = GoogleSignIn.getClient(requireContext(), gso)
+        if (account != null) {
+            val email = account.email
+
+            binding.tvName.text = "Hi! $email"
+        }
+
+        binding.progressBar.visibility = View.VISIBLE
+        displayQRCodes(requireContext())
+        binding.tvLogout.setOnClickListener {
+            googleSignInClient.signOut().addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    FirebaseAuth.getInstance().signOut()
+                    showLogoutPopUp()
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "Logout Failed: ${task.exception?.message}",
+                        Toast.LENGTH_SHORT
+                    )
                 }
             }
+
+
+        }
+        return binding.root
     }
+
+    private fun showLogoutPopUp() {
+
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setMessage("Logout Successful")
+
+        val dialog = builder.create()
+        dialog.show()
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            dialog.dismiss()
+            val intent = Intent(requireContext(), SignupActivity::class.java)
+            startActivity(intent)
+        }, 2000)
+
+    }
+
+    private fun isInternetAvailable(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkInfo = connectivityManager.activeNetworkInfo
+        return networkInfo != null && networkInfo.isConnected
+
+    }
+
+    private fun fetchQRCodesFromFirebase(userId: String, onResult: (List<QRCode>) -> Unit) {
+        val qrCodesList = mutableListOf<QRCode>()
+        val db =
+            FirebaseDatabase.getInstance().reference.child("users").child(userId).child("qrcodes")
+
+        db.get().addOnSuccessListener { snapshot ->
+
+            for (qrSnapshot in snapshot.children) {
+                val qrCode = qrSnapshot.getValue(QRCode::class.java)
+                if (qrCode != null) {
+                    qrCodesList.add(qrCode)
+                }
+            }
+            onResult(qrCodesList)
+        }.addOnFailureListener {
+            onResult(emptyList())
+        }
+    }
+
+    private fun fetchQRCodeFromLocalStorage(onResult: (List<QRCode>) -> Unit) {
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = QRDatabase.getDatabase(requireContext())
+            val localQRCodes = db.qrCodeDao().getAllQRCodes()
+
+            val qrCodes = localQRCodes.map { qrCodeEntity ->
+                QRCode(
+                    id = qrCodeEntity.id.toString(),
+                    name = qrCodeEntity.qrCodeName,
+                    imageUrl = qrCodeEntity.qrCodePath
+                )
+            }
+
+            withContext(Dispatchers.Main) {
+                onResult(qrCodes)
+            }
+
+        }
+    }
+
+    private fun combineAndFilterQRCodes(
+        firebaseQRCodes: List<QRCode>,
+        localQRCodes: List<QRCode>
+    ): List<QRCode> {
+        val combinedList = mutableListOf<QRCode>()
+        val nameSet = mutableListOf<String>()
+        firebaseQRCodes.forEach { qrCode ->
+            if (!nameSet.contains(qrCode.name)) {
+
+                combinedList.add(qrCode)
+                nameSet.add(qrCode.name)
+
+            }
+
+        }
+
+        localQRCodes.forEach { qrCode ->
+
+            if (!nameSet.contains(qrCode.name)) {
+                combinedList.add(qrCode)
+                nameSet.add(qrCode.name)
+            }
+
+        }
+
+        return combinedList
+    }
+
+    private fun displayQRCodes(context: Context){
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+
+        if(userId == null){
+            binding.tvNoQRCodes.visibility = View.VISIBLE
+            binding.progressBar.visibility = View.GONE
+            return
+        }
+
+        if(isInternetAvailable(requireContext())){
+            fetchQRCodesFromFirebase(userId){firebaseQRCodes ->
+                fetchQRCodeFromLocalStorage { localQRCodes ->
+                    val combinedQRCodes = combineAndFilterQRCodes(firebaseQRCodes, localQRCodes)
+
+                    if(combinedQRCodes.isEmpty()){
+                        binding.tvNoQRCodes.visibility = View.VISIBLE
+                        binding.progressBar.visibility = View.GONE
+                    }else{
+                        binding.tvNoQRCodes.visibility = View.GONE
+                        binding.rvQRCodes.adapter = QRCodeAdapter(combinedQRCodes)
+                        binding.rvQRCodes.visibility = View.VISIBLE
+                        binding.progressBar.visibility = View.GONE
+                    }
+
+                }
+            }
+        }else{
+            fetchQRCodeFromLocalStorage {localQRCodes ->
+                if(localQRCodes.isEmpty()){
+                    binding.tvNoQRCodes.visibility = View.VISIBLE
+                    binding.progressBar.visibility = View.GONE
+                }else{
+                    binding.tvNoQRCodes.visibility = View.GONE
+                    binding.rvQRCodes.adapter = QRCodeAdapter(localQRCodes)
+                    binding.rvQRCodes.visibility = View.VISIBLE
+                    binding.progressBar.visibility = View.GONE
+                }
+
+            }
+        }
+    }
+
+
 }

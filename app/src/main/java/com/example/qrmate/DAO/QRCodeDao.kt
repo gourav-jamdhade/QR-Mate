@@ -9,7 +9,7 @@ import androidx.room.Query
 interface QRCodeDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(qrCodeEntity: QRCodeEntity)
+    suspend fun insert(qrCodeEntity: QRCodeEntity)
 
     @Query("SELECT * FROM qr_table ORDER BY timestamp DESC")
     fun getAllQRCodes(): List<QRCodeEntity>
