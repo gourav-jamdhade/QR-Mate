@@ -23,6 +23,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -51,6 +52,7 @@ class QrFragment : Fragment() {
     private val REQUEST_CODE_CONTACT_PICK = 103
     private val REQUEST_CODE_IMAGE_PICK = 104
     private val PICK_PDF_FILE = 1
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
@@ -62,6 +64,30 @@ class QrFragment : Fragment() {
             val intent = Intent(activity, QrScannerActivity::class.java)
             startActivityForResult(intent, REQUEST_CODE_QR_SCAN)
         }
+
+        val smsResultLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    // Retrieve the selected SMS from the result intent
+                    val selectedSms = result.data?.getStringExtra("selectedSms")
+                    selectedSms?.let {
+                        // Use this SMS (e.g., generate QR code)
+                        val qrBitmap = generateQR(it)
+
+                        if (qrBitmap != null) {
+                            val byteArray = bitmapToByteArray(qrBitmap)
+                            Log.d("QR Bitmap", qrBitmap.toString())
+                            QrDisplayActivity.start(
+                                requireContext(),
+                                "Your Message: $it",
+                                byteArray
+                            )
+                        } else {
+                            Log.d("Qr Bitmap", "Failed")
+                        }
+                    }
+                }
+            }
 
         val pickPdfLauncher =
             registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -96,7 +122,18 @@ class QrFragment : Fragment() {
             openMapsForLocation()
         }
 
+        //SMS btn
+        binding.btnSMS.setOnClickListener {
+            val intent = Intent(requireContext(), SmsActivity::class.java)
+            smsResultLauncher.launch(intent)
 
+        }
+
+
+        //wifi btn
+        binding.btnWifi.setOnClickListener {
+            showWifiDialog()
+        }
         //Website btn
         binding.btnWebsite.setOnClickListener {
             showWebsiteTextInputDialog()
@@ -112,7 +149,8 @@ class QrFragment : Fragment() {
                     requireActivity(), arrayOf(Manifest.permission.READ_CONTACTS), 1
                 )
             } else {
-                pickContact()
+                val intent = Intent(requireContext(), SmsActivity::class.java)
+                smsResultLauncher.launch(intent)
             }
         }
 
@@ -133,6 +171,57 @@ class QrFragment : Fragment() {
         }
 
         return binding.root
+
+    }
+
+    private fun showWifiDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_wifi_qr, null)
+        val ssidEditText = dialogView.findViewById<EditText>(R.id.etSSID)
+        val passwordEditText = dialogView.findViewById<EditText>(R.id.etPassword)
+        val generateButton = dialogView.findViewById<Button>(R.id.btnGenerateQRCode)
+
+        // Create the dialog
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle("Wi-Fi QR Code")
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        // Show the dialog
+        dialog.show()
+
+
+
+        generateButton.setOnClickListener {
+            val ssid = ssidEditText.text.toString()
+            val password = passwordEditText.text.toString().ifEmpty { "" }
+
+            if (ssid.isNotEmpty()) {
+                // Generate Wi-Fi QR code
+                val wifiConfig = "WIFI:S:$ssid;\n T:WPA;\n P:$password"
+                val qrBitmap = generateQR(wifiConfig)
+
+                // Pass the QR bitmap to your QRDisplayActivity or handle it as needed
+                if (qrBitmap != null) {
+
+                    val byteArrayOutputStream = ByteArrayOutputStream()
+                    qrBitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+                    val byteArray = byteArrayOutputStream.toByteArray()
+                    QrDisplayActivity.start(requireContext(), wifiConfig, byteArray)
+
+                    dialog.dismiss() // Close dialog
+                }
+            } else {
+                Toast.makeText(requireContext(), "Please enter a valid SSID", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+    }
+
+    private fun isWifiOpen(toString: String): Boolean {
+
+        // Placeholder logic; replace with actual Wi-Fi check logic as needed
+        return false // For now, assume all networks require a password
 
     }
 

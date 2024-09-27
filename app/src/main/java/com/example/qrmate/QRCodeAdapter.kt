@@ -5,12 +5,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.TextView
-import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 
-class QRCodeAdapter(private val qrCodeList:List<QRCode>) :RecyclerView.Adapter<QRCodeAdapter.QRCodeViewHolder>(){
+class QRCodeAdapter(
+    private val qrCodeList: List<QRCode>
+) : RecyclerView.Adapter<QRCodeAdapter.QRCodeViewHolder>() {
 
     class QRCodeViewHolder(view: View):RecyclerView.ViewHolder(view){
         val qrImage:ImageView = view.findViewById(R.id.ivQRImage)
@@ -37,6 +39,9 @@ class QRCodeAdapter(private val qrCodeList:List<QRCode>) :RecyclerView.Adapter<Q
             }
             context.startActivity(intent)
         }
+
+
+        //options button click
     }
 
     override fun getItemCount(): Int {

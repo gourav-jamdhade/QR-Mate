@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -20,6 +21,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -27,24 +29,25 @@ import kotlinx.coroutines.withContext
 class ProfileFragment : Fragment() {
 
     private lateinit var binding: FragmentProfileBinding
-
+    private lateinit var qrDatabase: QRDatabase
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
+
         binding = FragmentProfileBinding.inflate(inflater, container, false)
         val account = GoogleSignIn.getLastSignedInAccount(requireActivity())
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
             .build()
-
+        qrDatabase = QRDatabase.getDatabase(requireContext())
         val googleSignInClient = GoogleSignIn.getClient(requireContext(), gso)
         if (account != null) {
             val email = account.email
 
-            binding.tvName.text = "Hi! $email"
+            binding.tvName.text = "Hi! ${email?.substringBefore("@")}"
         }
 
         binding.progressBar.visibility = View.VISIBLE
@@ -111,11 +114,11 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun fetchQRCodeFromLocalStorage(onResult: (List<QRCode>) -> Unit) {
+    private fun fetchQRCodeFromLocalStorage(userId: String, onResult: (List<QRCode>) -> Unit) {
 
         CoroutineScope(Dispatchers.IO).launch {
             val db = QRDatabase.getDatabase(requireContext())
-            val localQRCodes = db.qrCodeDao().getAllQRCodes()
+            val localQRCodes = db.qrCodeDao().getAllQRCodes(userId)
 
             val qrCodes = localQRCodes.map { qrCodeEntity ->
                 QRCode(
@@ -171,7 +174,7 @@ class ProfileFragment : Fragment() {
 
         if(isInternetAvailable(requireContext())){
             fetchQRCodesFromFirebase(userId){firebaseQRCodes ->
-                fetchQRCodeFromLocalStorage { localQRCodes ->
+                fetchQRCodeFromLocalStorage(FirebaseAuth.getInstance().currentUser?.email!!.substringBefore("@")) { localQRCodes ->
                     val combinedQRCodes = combineAndFilterQRCodes(firebaseQRCodes, localQRCodes)
 
                     if(combinedQRCodes.isEmpty()){
@@ -187,7 +190,7 @@ class ProfileFragment : Fragment() {
                 }
             }
         }else{
-            fetchQRCodeFromLocalStorage {localQRCodes ->
+            fetchQRCodeFromLocalStorage(FirebaseAuth.getInstance().currentUser?.email!!.substringBefore("@")) {localQRCodes ->
                 if(localQRCodes.isEmpty()){
                     binding.tvNoQRCodes.visibility = View.VISIBLE
                     binding.progressBar.visibility = View.GONE
@@ -201,6 +204,8 @@ class ProfileFragment : Fragment() {
             }
         }
     }
+
+
 
 
 }

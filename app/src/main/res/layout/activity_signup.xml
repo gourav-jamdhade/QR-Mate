@@ -55,6 +55,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:visibility="gone"
             android:orientation="horizontal"
             android:layout_marginHorizontal="10dp"
             android:background="@drawable/linear_layout_bg">

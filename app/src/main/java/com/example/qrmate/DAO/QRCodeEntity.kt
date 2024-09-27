@@ -9,5 +9,6 @@ data class QRCodeEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "qr_code_name") val qrCodeName: String,
     @ColumnInfo(name = "qr_code_path") val qrCodePath: String,
-    @ColumnInfo(name = "timestamp") val timestamp: Long
+    @ColumnInfo(name = "timestamp") val timestamp: Long,
+    @ColumnInfo(name = "user_id") val userId: String
 )

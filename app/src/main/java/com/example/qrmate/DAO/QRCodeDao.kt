@@ -11,6 +11,11 @@ interface QRCodeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(qrCodeEntity: QRCodeEntity)
 
-    @Query("SELECT * FROM qr_table ORDER BY timestamp DESC")
-    fun getAllQRCodes(): List<QRCodeEntity>
+    @Query("SELECT * FROM qr_table WHERE user_id= :userId ORDER BY timestamp DESC")
+    fun getAllQRCodes(userId:String): List<QRCodeEntity>
+
+    @Query("DELETE FROM qr_table WHERE id = :id")
+    fun delete(id: String)
+
+
 }

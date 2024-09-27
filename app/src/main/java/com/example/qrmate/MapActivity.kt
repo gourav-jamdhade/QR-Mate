@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -30,12 +31,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var map: GoogleMap
     private lateinit var fusedLoactionClient: FusedLocationProviderClient
     private lateinit var placesClient: PlacesClient
-    private lateinit var searchView: SearchView
+    //private lateinit var searchView: SearchView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_map)
-
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
 
         Places.initialize(applicationContext, "AIzaSyD05Z-T8S4iL2kGX7jpWGw4k_4XN7EcBsE")
         placesClient = Places.createClient(this)
@@ -48,21 +49,21 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
         fusedLoactionClient = LocationServices.getFusedLocationProviderClient(this)
 
-        searchView = findViewById(R.id.searchView)
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                if (query != null) {
-                    searchLocation(query)
-                }
-
-                return false
-            }
-
-            override fun onQueryTextChange(newText: String?): Boolean {
-                return false
-            }
-
-        })
+//        searchView = findViewById(R.id.searchView)
+//        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+//            override fun onQueryTextSubmit(query: String?): Boolean {
+//                if (query != null) {
+//                    searchLocation(query)
+//                }
+//
+//                return false
+//            }
+//
+//            override fun onQueryTextChange(newText: String?): Boolean {
+//                return false
+//            }
+//
+//        })
 
     }
 
@@ -108,48 +109,48 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
-    private fun searchLocation(query: String) {
-        val request = FindAutocompletePredictionsRequest.builder()
-            .setQuery(query)
-            .build()
+//    private fun searchLocation(query: String) {
+//        val request = FindAutocompletePredictionsRequest.builder()
+//            .setQuery(query)
+//            .build()
+//
+//        placesClient.findAutocompletePredictions(request)
+//            .addOnSuccessListener { response ->
+//
+//                for (predictions: AutocompletePrediction in response.autocompletePredictions) {
+//                    Log.i("Places", predictions.placeId)
+//                    fetchPlaceDetails(predictions.placeId)
+//                }
+//            }.addOnFailureListener { exception ->
+//                Log.e("Places", "Place not found: ${exception.message}")
+//                Toast.makeText(this, "Place not found: ${exception.message}", Toast.LENGTH_SHORT)
+//                    .show()
+//            }
+//    }
 
-        placesClient.findAutocompletePredictions(request)
-            .addOnSuccessListener { response ->
-
-                for (predictions: AutocompletePrediction in response.autocompletePredictions) {
-                    Log.i("Places", predictions.placeId)
-                    fetchPlaceDetails(predictions.placeId)
-                }
-            }.addOnFailureListener { exception ->
-                Log.e("Places", "Place not found: ${exception.message}")
-                Toast.makeText(this, "Place not found: ${exception.message}", Toast.LENGTH_SHORT)
-                    .show()
-            }
-    }
-
-    private fun fetchPlaceDetails(placeId: String) {
-
-        val placeFields = listOf(Place.Field.LAT_LNG)
-        val request = FetchPlaceRequest.builder(placeId, placeFields).build()
-
-        placesClient.fetchPlace(request)
-            .addOnSuccessListener { response ->
-
-                val place = response.place
-                val latLng = place.latLng
-                if(latLng != null){
-                    map.clear()
-                    map.addMarker(MarkerOptions().position(latLng))
-                    map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
-                }
-            }
-            .addOnFailureListener { exception ->
-                Log.e("Places", "Place not found: ${exception.message}")
-                Toast.makeText(this, "Place not found: ${exception.message}", Toast.LENGTH_SHORT)
-                    .show()
-            }
-
-    }
+//    private fun fetchPlaceDetails(placeId: String) {
+//
+//        val placeFields = listOf(Place.Field.LAT_LNG)
+//        val request = FetchPlaceRequest.builder(placeId, placeFields).build()
+//
+//        placesClient.fetchPlace(request)
+//            .addOnSuccessListener { response ->
+//
+//                val place = response.place
+//                val latLng = place.latLng
+//                if(latLng != null){
+//                    map.clear()
+//                    map.addMarker(MarkerOptions().position(latLng))
+//                    map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+//                }
+//            }
+//            .addOnFailureListener { exception ->
+//                Log.e("Places", "Place not found: ${exception.message}")
+//                Toast.makeText(this, "Place not found: ${exception.message}", Toast.LENGTH_SHORT)
+//                    .show()
+//            }
+//
+//    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,

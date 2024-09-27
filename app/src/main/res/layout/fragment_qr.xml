@@ -263,7 +263,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/btnPPT"
+                android:id="@+id/btnSMS"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"

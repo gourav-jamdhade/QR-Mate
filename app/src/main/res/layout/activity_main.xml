@@ -29,14 +29,14 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
-            android:id="@+id/btn_info"
+            android:id="@+id/btn_profile"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_toLeftOf="@id/btn_qr"
             android:layout_marginRight="15dp"
             android:background="@drawable/rounded_bg"
-            android:contentDescription="Info Button"
+            android:contentDescription="Profile Button"
             android:padding="5dp"
             android:src="@drawable/about_icon" />
 
@@ -54,14 +54,14 @@
              />
 
         <ImageView
-            android:id="@+id/btn_profile"
+            android:id="@+id/btn_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@id/btn_qr"
             android:layout_centerVertical="true"
             android:layout_marginLeft="15dp"
             android:background="@drawable/rounded_bg"
-            android:contentDescription="Profile Button"
+            android:contentDescription="Info Button"
             android:padding="5dp"
             android:src="@drawable/profile_icon"
             />

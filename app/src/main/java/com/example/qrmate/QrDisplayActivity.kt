@@ -78,7 +78,7 @@ class QrDisplayActivity : AppCompatActivity() {
                 }
             }
 
-            saveToRoomDB(this, qrBitmap, text, qrDatabase)
+            saveToRoomDB(this, qrBitmap, text, qrDatabase, userId = FirebaseAuth.getInstance().currentUser?.email?.substringBefore("@") ?: "")
 
             if(isInternetAvailable(this)){
                 saveToFirebase(this, qrBitmap!!, text!!, currentTime)
@@ -221,7 +221,8 @@ class QrDisplayActivity : AppCompatActivity() {
         context: Context,
         qrBitmap: Bitmap?,
         qrCodeName: String?,
-        qrDatabase: QRDatabase
+        qrDatabase: QRDatabase,
+        userId: String
     ) {
 
         // Get the current user from Firebase Auth
@@ -279,7 +280,8 @@ class QrDisplayActivity : AppCompatActivity() {
             val qrEntity = QRCodeEntity(
                 qrCodePath = qrFile.absolutePath,
                 timestamp = currentTime,
-                qrCodeName = qrCodeName!!
+                qrCodeName = qrCodeName!!,
+                userId = userId
             )
             qrDatabase.qrCodeDao().insert(qrEntity)
         }
