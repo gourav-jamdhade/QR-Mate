@@ -62,29 +62,33 @@ The QR Mate app employs both Firebase and Room Database for managing QR codes. H
 
 To run the project locally, follow these steps:
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/qrmate.git
-Open the project in Android Studio.
+1. Open the project in Android Studio.
+2. Ensure the necessary permissions are set up in `AndroidManifest.xml` for:
+   - Camera access
+   - Reading SMS
+3. Sync the project with Gradle files.
+4. Run the app on an emulator or a physical device.
 
-Make sure to have the necessary permissions set up in AndroidManifest.xml for camera access and reading SMS.
+**OR You can download the app from the Release section**
 
-Sync the project with Gradle files.
+## Usage Flows
 
-Run the app on an emulator or a physical device.
+### Generating a Wi-Fi QR Code
+- Tap the **"Generate Wi-Fi QR Code"** button.
+- Input the SSID and password (if required).
+- Tap **"Generate QR Code"** to create the QR code.
 
-Usage Flows
-Generating a Wi-Fi QR Code
-Tap the "Generate Wi-Fi QR Code" button.
-Input the SSID and password (if required).
-Tap "Generate QR Code" to create the QR code.
-Sharing a Message as QR Code
-Select the SMS button.
-Choose a message from the SMS inbox.
-The app converts the selected message into a QR code.
-Scanning a QR Code
-Tap the "Scan QR Code" button.
-Point the camera at a QR code.
-The app decodes the QR code and displays the information.
-Managing QR Codes
-View saved QR codes in a list format.
+### Sharing a Message as QR Code
+- Select the **SMS** button.
+- Choose a message from the SMS inbox.
+- The app converts the selected message into a QR code.
+
+### Scanning a QR Code
+- Tap the **"Scan QR Code"** button.
+- Point the camera at a QR code.
+- The app decodes the QR code and displays the information.
+
+### Managing QR Codes
+- View saved QR codes in a list format.
+- Delete or share QR codes as needed.
+
