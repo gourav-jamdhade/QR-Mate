@@ -9,15 +9,16 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class QRCodeAdapter(
-    private val qrCodeList: List<QRCode>
-) : RecyclerView.Adapter<QRCodeAdapter.QRCodeViewHolder>() {
+class QRCodeAdapter(private val qrCodeList: List<QRCode>) : RecyclerView.Adapter<QRCodeAdapter.QRCodeViewHolder>() {
 
     class QRCodeViewHolder(view: View):RecyclerView.ViewHolder(view){
         val qrImage:ImageView = view.findViewById(R.id.ivQRImage)
         val qrName:TextView = view.findViewById(R.id.tvQRName)
-        val options:ImageView = view.findViewById(R.id.ivOptions)
+        //val options:ImageView = view.findViewById(R.id.ivOptions)
     }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int):QRCodeViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.qr_rv_item,parent,false)
@@ -27,9 +28,12 @@ class QRCodeAdapter(
     override fun onBindViewHolder(holder: QRCodeAdapter.QRCodeViewHolder, position: Int) {
         val qrCode = qrCodeList[position]
 
-        holder.qrName.text = qrCode.name
+        CoroutineScope(Dispatchers.Main).launch {
+            holder.qrName.text = qrCode.name
 
-        Glide.with(holder.qrImage.context).load(qrCode.imageUrl).into(holder.qrImage)
+            Glide.with(holder.qrImage.context).load(qrCode.imageUrl).into(holder.qrImage)
+        }
+
 
         holder.itemView.setOnClickListener {
             val context = holder.itemView.context
@@ -40,8 +44,6 @@ class QRCodeAdapter(
             context.startActivity(intent)
         }
 
-
-        //options button click
     }
 
     override fun getItemCount(): Int {

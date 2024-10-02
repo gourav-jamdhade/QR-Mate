@@ -88,4 +88,8 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.room:room-ktx:2.6.1")
 
+    implementation ("androidx.lifecycle:lifecycle-extensions:2.2.0")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6")
+    implementation ("androidx.lifecycle:lifecycle-common-java8:2.8.6")
+
 }
