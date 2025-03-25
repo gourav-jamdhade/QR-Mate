@@ -79,6 +79,10 @@ Clone the repository and import the project into Android Studio. The required de
     </li>
 </ol>
 
-[![Watch the demo](https://github.com/user-attachments/assets/f2fcb2b7-3263-4508-a21d-7804e67b6a98)](https://youtube.com/shorts/rl4OMcrMqTM)
+
+
+
+
+https://github.com/user-attachments/assets/11a00830-48ce-493a-8c57-8f6a9d5976f5
 
 
