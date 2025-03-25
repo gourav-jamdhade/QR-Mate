@@ -79,4 +79,6 @@ Clone the repository and import the project into Android Studio. The required de
         </ul>
     </li>
 </ol>
+<video src="https://drive.google.com/file/d/1vN7m_deUoSN00KdkUoIhK9YXL2TUvn8e/view?usp=drive_link">
+</video>
 
