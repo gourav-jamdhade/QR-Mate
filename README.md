@@ -69,7 +69,6 @@ Clone the repository and import the project into Android Studio. The required de
         </ul>
     </li>
     <li><strong>Scan QR Code</strong>:
-        <ul>
             <li>Use the camera to scan or upload an image from the gallery.</li>
         </ul>
     </li>
@@ -79,6 +78,7 @@ Clone the repository and import the project into Android Studio. The required de
         </ul>
     </li>
 </ol>
-<video src="https://drive.google.com/file/d/1vN7m_deUoSN00KdkUoIhK9YXL2TUvn8e/view?usp=drive_link">
-</video>
+
+[![Watch the demo](https://github.com/user-attachments/assets/f2fcb2b7-3263-4508-a21d-7804e67b6a98)](https://youtube.com/shorts/rl4OMcrMqTM)
+
 
