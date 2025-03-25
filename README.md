@@ -32,11 +32,6 @@
             <li>Automatically syncs deletions with Firebase when back online.</li>
         </ul>
     </li>
-    <li><strong>Modern UI</strong>
-        <ul>
-            <li>Intuitive user interface with support for both light and dark themes.</li>
-        </ul>
-    </li>
 </ul>
 
 <hr>
@@ -55,25 +50,11 @@
     </li>
 </ul>
 
-<hr>
 
-<h2>Getting Started</h2>
-
-<h3>Prerequisites</h3>
-<ul>
-    <li>Android Studio</li>
-    <li>A device or emulator running Android 6.0 (Marshmallow) or higher</li>
-    <li>Firebase project setup with Realtime Database</li>
-</ul>
 
 <h3>Download and Installation</h3>
-<ol>
-    <li>Download the latest release APK from the <a href="https://github.com/gourav-jamdhade/QR-Mate/releases/download/app/QR.Code.Generator.and.Manager.App.apk">Releases</a> section.</li>
-    <li>Transfer the APK to your Android device.</li>
-    <li>Enable installation from unknown sources if prompted.</li>
-    <li>Install the APK by opening it on your device.</li>
-</ol>
-<hr>
+Clone the repository and import the project into Android Studio. The required dependencies are specified in the build.gradle files.
+
 
 <h2>Usage</h2>
 <ol>
@@ -97,42 +78,5 @@
             <li>View saved QR codes, delete them, or share them as needed.</li>
         </ul>
     </li>
-    <li><strong>Settings</strong>:
-        <ul>
-            <li>Configure preferences, including theme options.</li>
-        </ul>
-    </li>
 </ol>
 
-<hr>
-
-<h2>Contribution</h2>
-<ol>
-    <li>Fork the repository.</li>
-    <li>Create a feature branch:
-        <pre><code>git checkout -b feature-name</code></pre>
-    </li>
-    <li>Commit your changes:
-        <pre><code>git commit -m "Add some feature"</code></pre>
-    </li>
-    <li>Push to the branch:
-        <pre><code>git push origin feature-name</code></pre>
-    </li>
-    <li>Open a pull request.</li>
-</ol>
-
-<hr>
-
-<h2>License</h2>
-<p>This project is licensed under the MIT License - see the <a href="LICENSE">LICENSE</a> file for details.</p>
-
-<hr>
-
-<h2>Contact</h2>
-<p><strong>Developer:</strong> Gourav Jamdhade</p>
-<p><strong>LinkedIn:</strong> <a href="https://linkedin.com/in/gouravjamdhade">linkedin.com/in/gouravjamdhade</a></p>
-<p><strong>GitHub:</strong> <a href="https://github.com/gourav-jamdhade">github.com/gourav-jamdhade</a></p>
-
-<hr>
-
-<p>Thank you for using QR Mate!</p>
